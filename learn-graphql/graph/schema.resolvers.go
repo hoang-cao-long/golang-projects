@@ -6,8 +6,8 @@ package graph
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
+	"math/rand"
 
 	"github.com/hoang-cao-long/learn-graphql/graph/model"
 )
@@ -15,7 +15,7 @@ import (
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
 	todo := &model.Todo{
-		ID:     fmt.Sprintf("T%d", rand.Int()),
+		ID:     fmt.Sprintf("T%v", rand.Int()),
 		Text:   input.Text,
 		Done:   false,
 		UserID: input.UserID,
