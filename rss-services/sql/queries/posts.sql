@@ -1,9 +1,9 @@
 -- name: CreatePost :one
 INSERT INTO posts(
-    id, 
-    created_at, 
-    updated_at, 
-    title, 
+    id,
+    created_at,
+    updated_at,
+    title,
     description,
     published_at,
     url,
