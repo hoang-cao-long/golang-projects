@@ -1,0 +1,5 @@
+db:
+  endpoint: 127.0.0.1:3310
+  username: root  
+  password: 1234
+  database: learn-gorm
