@@ -6,7 +6,7 @@ Fixes # (issue)
 
 ## Type of change (Chọn loại nội dung của merge request)
 
-Please delete options that are not relevant.
+Please delete options that are not relevant. 
 
 - [ ] Bug fix (non-breaking change which fixes an issue) (Fix bug)
 - [ ] New feature (non-breaking change which adds functionality) (Thêm tính năng, không thay đổi interface tính năng cũ)

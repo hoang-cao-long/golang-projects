@@ -1,0 +1,17 @@
+linters-settings:
+  staticcheck:
+    # https://staticcheck.io/docs/options#checks
+    checks:
+      - "all"
+      - "-ST1000"
+      - "-ST1003" # Poorly chosen identifier
+      - "-ST1016" # Use consistent method receiver names
+      - "-ST1020"
+      - "-ST1021"
+      - "-ST1022"
+
+linters:
+  disable:
+    - unused # this lint does not work well
+    - gosimple # this lint does not work well
+    - staticcheck # this lint does not work well
