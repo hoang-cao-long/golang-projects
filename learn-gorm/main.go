@@ -1,49 +1,53 @@
 package main
 
+//TODO
+//FIXME
+//HACK
+//XXX
+//BUG
 import (
-	// "fmt"
-	// "log"
+	"log"
 
 	"encoding/json"
 	"fmt"
 
-	// "os"
+	"os"
 	"time"
-	// "github.com/hoang-cao-long/learn-gorm/config"
+
+	"github.com/hoang-cao-long/learn-gorm/config"
+	"github.com/hoang-cao-long/learn-gorm/database"
 	"github.com/hoang-cao-long/learn-gorm/model"
-	// "github.com/spf13/viper"
-	// "github.com/hoang-cao-long/learn-gorm/database"
-	// "github.com/hoang-cao-long/learn-gorm/model"
+	"github.com/spf13/viper"
 )
 
-// func InitConfig() (config.Config, error) {
-// 	var configFile config.Config
+func InitConfig() (config.Config, error) {
+	var configFile config.Config
 
-// 	home, _ := os.Getwd()
+	home, _ := os.Getwd()
 
-// 	viper.AddConfigPath(home)
-// 	viper.SetConfigType("yaml")
-// 	viper.SetConfigName("config")
-// 	viper.AutomaticEnv()
+	viper.AddConfigPath(home)
+	viper.SetConfigType("yaml")
+	viper.SetConfigName("config")
+	viper.AutomaticEnv()
 
-// 	if err := viper.ReadInConfig(); err != nil {
-// 		return config.Config{}, err
-// 	} else {
-// 		viper.Unmarshal(&configFile)
-// 		return configFile, nil
-// 	}
-// }
+	if err := viper.ReadInConfig(); err != nil {
+		return config.Config{}, err
+	} else {
+		viper.Unmarshal(&configFile)
+		return configFile, nil
+	}
+}
 
 func main() {
-	// config, err := InitConfig()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	config, err := InitConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// db, err := database.InitGORM(config)
-	// if err != nil {
-	// 	log.Println("Cannot connect to database")
-	// }
+	db, err := database.InitGORM(config)
+	if err != nil {
+		log.Println("Cannot connect to database")
+	}
 
 	now := time.Now().UTC()
 
@@ -74,7 +78,7 @@ func main() {
 
 	fmt.Println(item2)
 
-	// db.AutoMigrate(&model.Category{})
+	db.AutoMigrate(&model.Category{})
 
 	// db.Create(&model.Category{Name: "long"})
 

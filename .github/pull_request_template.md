@@ -2,11 +2,11 @@
 
 Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.  
 (Mô tả nội dung tóm tắt tính năng/bug mà mr này đang xử lý, đính kèm thêm issue link trên Youtrack)  
-Fixes # (issue) 
+Fixes # (your_branch) 
 
 ## Type of change (Chọn loại nội dung của merge request)
 
-Please delete options that are not relevant.
+Please delete options that are not relevant. 
 
 - [ ] Bug fix (non-breaking change which fixes an issue) (Fix bug)
 - [ ] New feature (non-breaking change which adds functionality) (Thêm tính năng, không thay đổi interface tính năng cũ)

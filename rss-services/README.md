@@ -8,3 +8,4 @@
     - Generate rss
     - Encode/decode json and xml
     - Running background
+    - Go Modules Reference with vendoring
