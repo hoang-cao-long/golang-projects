@@ -1,5 +1,10 @@
 package main
 
+//TODO
+//FIXME
+//HACK
+//XXX
+//BUG
 import (
 	"log"
 
