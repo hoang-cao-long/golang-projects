@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 
 	"github.com/qmuntal/stateless"
@@ -69,7 +71,12 @@ func main() {
 		Permit(triggerTakenOffHold, stateConnected).
 		Permit(triggerPhoneHurledAgainstWall, statePhoneDestroyed)
 
-	phoneCall.ToGraph()
+	phoneGraph := phoneCall.ToGraph()
+	err := stateMachineGenerator(phoneGraph)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	phoneCall.Fire(triggerCallDialed, "qmuntal")
 	phoneCall.Fire(triggerCallConnected)
@@ -83,6 +90,16 @@ func main() {
 	phoneCall.Fire(triggerPhoneHurledAgainstWall)
 	fmt.Printf("State is %v\n", phoneCall.MustState())
 
+}
+
+func stateMachineGenerator(graph string) error {
+	output := []byte(graph)
+	path, _ := filepath.Abs("./main.dot")
+	if err := os.WriteFile(path, output, 0666); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func onSetVolume(volume int) {
