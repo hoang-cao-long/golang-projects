@@ -1,10 +1,10 @@
-// You can edit this code!
-// Click here and start typing.
 package main
 
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/hoang-cao-long/learn-gorm/monorepo/services/gateway/utils"
 )
 
 type test struct {
@@ -20,4 +20,6 @@ func main() {
 	b := reflect.TypeOf(test{})
 
 	fmt.Println(b.FieldByIndex([]int{0, 1}))
+
+	utils.DeprecatedFunc()
 }
