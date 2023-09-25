@@ -126,6 +126,3 @@ func startCallTimer(_ context.Context, _ ...any) error {
 func stopCallTimer() {
 	fmt.Println("[Timer:] Call ended at 11:30am")
 }
-
-hello
-long
