@@ -80,7 +80,7 @@ func main() {
 
 	db.AutoMigrate(&model.Category{})
 
-	// db.Create(&model.Category{Name: "long"})
+	db.Create(&model.Category{Name: "long"})
 
 	// var cate []model.Category
 	// db.First(&cate, 1)
