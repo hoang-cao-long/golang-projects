@@ -1,6 +1,7 @@
 ## Description
 - Branch: #(your_branch)
 - Task: [name_issue](link_issue)
+- Link: [Document](link_document)
 
 ## Type of change (chọn loại nội dung của merge request)
 - [ ] Bug fix (non-breaking change which fixes an issue) (Fix bug)
