@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Kutelata/rssagg/internal/auth"
-	"github.com/Kutelata/rssagg/internal/database"
+	"github.com/hoang-cao-long/golang-side-projects/rss-services/internal/auth"
+	"github.com/hoang-cao-long/golang-side-projects/rss-services/internal/database"
 )
 
 type authedHandler func(http.ResponseWriter, *http.Request, database.User)

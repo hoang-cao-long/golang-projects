@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Kutelata/rssagg/internal/database"
 	"github.com/google/uuid"
+	"github.com/hoang-cao-long/golang-side-projects/rss-services/internal/database"
 )
 
 func startScraping(

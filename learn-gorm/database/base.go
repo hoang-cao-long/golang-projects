@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/hoang-cao-long/learn-gorm/config"
+	"github.com/hoang-cao-long/golang-side-projects/learn-gorm/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

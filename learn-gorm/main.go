@@ -14,9 +14,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/hoang-cao-long/learn-gorm/config"
-	"github.com/hoang-cao-long/learn-gorm/database"
-	"github.com/hoang-cao-long/learn-gorm/model"
+	"github.com/hoang-cao-long/golang-side-projects/learn-gorm/config"
+	"github.com/hoang-cao-long/golang-side-projects/learn-gorm/database"
+	"github.com/hoang-cao-long/golang-side-projects/learn-gorm/model"
 	"github.com/spf13/viper"
 )
 

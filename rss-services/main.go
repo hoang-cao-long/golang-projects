@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/Kutelata/rssagg/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
+	"github.com/hoang-cao-long/golang-side-projects/rss-services/internal/database"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )

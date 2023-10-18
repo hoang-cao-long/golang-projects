@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/hoang-cao-long/learn-graphql/graph/model"
+	"github.com/hoang-cao-long/golang-side-projects/learn-graphql/graph/model"
 )
 
 // CreateTodo is the resolver for the createTodo field.
