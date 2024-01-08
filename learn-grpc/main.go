@@ -46,4 +46,9 @@ func main() {
 
 	fmt.Print(i.Code)
 	fmt.Print(c.Config{})
+
+loop:
+	for n := 0; n < 10; n++ {
+		continue loop
+	}
 }
