@@ -25,19 +25,24 @@ func TestVault(t *testing.T) {
 	}
 
 	// Authenticate
-	client.SetToken("hvs.5hdSgLk8o7BD123Q3XlYn5yc")
+	client.SetToken("hvs.nSXxiIHk7oS8GFgdyvQv92f8")
 
 	secretData := map[string]interface{}{
 		"password": "Hashi123",
 	}
 
 	// Write a secret
-	valueEncrypt, err := client.KVv2("secret").Put(context.Background(), "my-secret-password", secretData)
+	_, err = client.KVv2("secret").Put(context.Background(), "my-secret-password", secretData)
 	if err != nil {
 		log.Fatalf("unable to write secret: %v", err)
 	}
 
-	fmt.Println("Secret written successfully.", valueEncrypt.Raw)
+	cipherText, err := client.Logical().Read("secret/data/my-secret-password")
+	if err != nil {
+		log.Fatalf("unable to read secret: %v", err)
+	}
+
+	fmt.Println("Secret written successfully.", cipherText.Data)
 
 	// Read a secret from the default mount path for KV v2 in dev mode, "secret"
 	secret, err := client.KVv2("secret").Get(context.Background(), "my-secret-password")
