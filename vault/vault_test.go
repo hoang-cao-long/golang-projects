@@ -1,19 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package vault
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"testing"
+	"encoding/base64"
 
 	vault "github.com/hashicorp/vault/api"
 )
 
-// This is the accompanying code for the Developer Quick Start.
-// WARNING: Using root tokens is insecure and should never be done in production!
 func TestVault(t *testing.T) {
 	config := vault.DefaultConfig()
 
@@ -25,39 +20,17 @@ func TestVault(t *testing.T) {
 	}
 
 	// Authenticate
-	client.SetToken("hvs.nSXxiIHk7oS8GFgdyvQv92f8")
+	client.SetToken("education")
 
-	secretData := map[string]interface{}{
-		"password": "Hashi123",
+	key := "vault:v1:1lxZVBCbnWpjZ2W8HBTShanfkFZpYmEvAa9CBqmje7E+GpPSMvW3H227GhaA4E+M6gUMhM35z+oXM+Ev"
+	data := map[string]interface{}{ 
+		"plaintext": base64.StdEncoding.EncodeToString([]byte("123456")),
 	}
 
-	// Write a secret
-	_, err = client.KVv2("secret").Put(context.Background(), "my-secret-password", secretData)
-	if err != nil {
-		log.Fatalf("unable to write secret: %v", err)
+	date1, err := client.Logical().Write(fmt.Sprintf("transit/long/encrypt/longdeptrai"), data)
+	if err != nil{
+		log.Fatalf("cannot encrypt: %v", err)
 	}
 
-	cipherText, err := client.Logical().Read("secret/data/my-secret-password")
-	if err != nil {
-		log.Fatalf("unable to read secret: %v", err)
-	}
-
-	fmt.Println("Secret written successfully.", cipherText.Data)
-
-	// Read a secret from the default mount path for KV v2 in dev mode, "secret"
-	secret, err := client.KVv2("secret").Get(context.Background(), "my-secret-password")
-	if err != nil {
-		log.Fatalf("unable to read secret: %v", err)
-	}
-
-	value, ok := secret.Data["password"].(string)
-	if !ok {
-		log.Fatalf("value type assertion failed: %T %#v", secret.Data["password"], secret.Data["password"])
-	}
-
-	if value != "Hashi123" {
-		log.Fatalf("unexpected password value %q retrieved from vault", value)
-	}
-
-	fmt.Println("Access granted!", value)
+	log.Print(date1.Data["ciphertext"])
 }
