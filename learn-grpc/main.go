@@ -5,12 +5,12 @@ import (
 	// "fmt"
 	// "log"
 	// "net"
-
 	"fmt"
 
-	c "github.com/hoang-cao-long/golang-side-projects/learn-gorm/config"
-	i "github.com/hoang-cao-long/golang-side-projects/learn-gorm/internal"
 	// "google.golang.org/grpc"
+
+	c "github.com/hoang-cao-long/golang-side-projects/learn-gorm/config"
+	// i "github.com/hoang-cao-long/golang-side-projects/learn-gorm/internal"
 )
 
 // // Define the gRPC server struct
@@ -44,7 +44,7 @@ func main() {
 	// 	log.Fatalf("Failed to serve: %v", err)
 	// }
 
-	fmt.Print(i.Code)
+	// fmt.Print(i.Code)
 	fmt.Print(c.Config{})
 
 loop:

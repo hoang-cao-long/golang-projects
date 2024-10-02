@@ -1,10 +1,10 @@
 package vault
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"testing"
-	"encoding/base64"
 
 	vault "github.com/hashicorp/vault/api"
 )
@@ -22,13 +22,13 @@ func TestVault(t *testing.T) {
 	// Authenticate
 	client.SetToken("education")
 
-	key := "vault:v1:1lxZVBCbnWpjZ2W8HBTShanfkFZpYmEvAa9CBqmje7E+GpPSMvW3H227GhaA4E+M6gUMhM35z+oXM+Ev"
-	data := map[string]interface{}{ 
+	// key := "vault:v1:1lxZVBCbnWpjZ2W8HBTShanfkFZpYmEvAa9CBqmje7E+GpPSMvW3H227GhaA4E+M6gUMhM35z+oXM+Ev"
+	data := map[string]interface{}{
 		"plaintext": base64.StdEncoding.EncodeToString([]byte("123456")),
 	}
 
 	date1, err := client.Logical().Write(fmt.Sprintf("transit/long/encrypt/longdeptrai"), data)
-	if err != nil{
+	if err != nil {
 		log.Fatalf("cannot encrypt: %v", err)
 	}
 

@@ -1,7 +1,7 @@
 package designpattern
 
 type NotificationService struct {
-	notifi
+	// notifi
 }
 
 type Service struct {
