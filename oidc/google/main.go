@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
@@ -12,19 +13,19 @@ import (
 )
 
 var (
-	clientID     = "1096864804548-6t3uujnbi7j7g8vn0o6rdamcf4ngjvp1.apps.googleusercontent.com"
-	clientSecret = "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"
+	clientID     = os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
 	redirectURL  = "http://localhost:8080/callback"
 	state        = "random-state-string" // for CSRF protection
-)
 
-var oauth2Config = oauth2.Config{
-	ClientID:     clientID,
-	ClientSecret: clientSecret,
-	RedirectURL:  redirectURL,
-	Endpoint:     google.Endpoint,
-	Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
-}
+	oauth2Config = oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+)
 
 func main() {
 	http.HandleFunc("/login", handleLogin)
@@ -90,3 +91,20 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Name: %s\n", claims.Name)
 	fmt.Fprintf(w, "Picture: %s\n", claims.Picture)
 }
+
+// func handleLogout(w http.ResponseWriter, r *http.Request) {
+// 	// Clear session (local application logout)
+// 	session, _ := store.Get(r, "session-name")
+// 	session.Values["authenticated"] = false
+// 	session.Save(r, w)
+
+// 	// Optionally revoke access token
+// 	accessToken, ok := session.Values["access_token"].(string)
+// 	if ok {
+// 		revokeURL := "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken
+// 		http.Get(revokeURL) // Revoke the access token by making a GET request
+// 	}
+
+// 	// Redirect to home or optionally to a Google logout page
+// 	http.Redirect(w, r, "/", http.StatusSeeOther)
+// }
