@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/coreos/go-oidc"
+	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -28,8 +31,9 @@ var (
 )
 
 func main() {
-	http.HandleFunc("/login", handleLogin)
-	http.HandleFunc("/callback", handleCallback)
+	http.HandleFunc("GET /login", handleLogin)
+	http.HandleFunc("GET /callback", handleCallback)
+	http.HandleFunc("GET /logout", handleLogoutWithTokenRevoke)
 	log.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -52,6 +56,13 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+	// Token contains both the access token and the refresh token
+	fmt.Fprintf(w, "Access Token: %s\n", token.AccessToken)
+
+	if token.RefreshToken != "" {
+		// Save the refresh token (e.g., in a database or session)
+		fmt.Fprintf(w, "Refresh Token: %s\n", token.RefreshToken)
 	}
 
 	// Fetch the ID token and verify it
@@ -92,19 +103,63 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Picture: %s\n", claims.Picture)
 }
 
-// func handleLogout(w http.ResponseWriter, r *http.Request) {
-// 	// Clear session (local application logout)
-// 	session, _ := store.Get(r, "session-name")
-// 	session.Values["authenticated"] = false
-// 	session.Save(r, w)
+var store = sessions.NewCookieStore([]byte(clientSecret))
 
-// 	// Optionally revoke access token
-// 	accessToken, ok := session.Values["access_token"].(string)
-// 	if ok {
-// 		revokeURL := "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken
-// 		http.Get(revokeURL) // Revoke the access token by making a GET request
-// 	}
+// Revoke the access or refresh token
+func revokeToken(token string) error {
+	revokeUrl := "https://accounts.google.com/o/oauth2/revoke"
+	reqUrl := fmt.Sprintf("%s?token=%s", revokeUrl, url.QueryEscape(token))
 
-// 	// Redirect to home or optionally to a Google logout page
-// 	http.Redirect(w, r, "/", http.StatusSeeOther)
-// }
+	resp, err := http.PostForm(reqUrl, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to revoke token: %s", string(body))
+	}
+
+	return nil
+}
+
+func handleLogoutWithTokenRevoke(w http.ResponseWriter, r *http.Request) {
+	// Get the session
+	session, _ := store.Get(r, "auth-session")
+
+	// // Extract the token from session
+	// token := session.Values["access_token"].(string)
+
+	// // Revoke the token with Google
+	// err := revokeToken(token)
+	// if err != nil {
+	// 	http.Error(w, "Failed to revoke token: "+err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// Clear session
+	session.Values["authenticated"] = false
+	session.Options.MaxAge = -1
+	session.Save(r, w)
+
+	// Redirect to home page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	// Clear session (local application logout)
+	session, _ := store.Get(r, "auth-session")
+	session.Values["authenticated"] = false
+	session.Save(r, w)
+
+	// Optionally revoke access token
+	accessToken, ok := session.Values["access_token"].(string)
+	if ok {
+		revokeURL := "https://accounts.google.com/o/oauth2/revoke?token=" + accessToken
+		http.Get(revokeURL) // Revoke the access token by making a GET request
+	}
+
+	// Redirect to home or optionally to a Google logout page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
