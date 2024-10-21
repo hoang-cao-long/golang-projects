@@ -1,192 +1,206 @@
-package main
+// package main
 
-import (
-	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
-	"fmt"
-	"log"
-	"net/http"
+// import (
+// 	"context"
+// 	"crypto/rand"
+// 	"crypto/sha256"
+// 	"encoding/base64"
+// 	"fmt"
+// 	"log"
+// 	"net/http"
+// 
 
-	"github.com/coreos/go-oidc"
-	"golang.org/x/oauth2"
-)
+// 	"github.com/coreos/go-oidc"
+// 	"golang.org/x/oauth2"
+// )
 
-// Variables for your Zitadel client credentials and other settings
-var (
-	clientID    = "289375988414941237"                                                                // Replace with your Zitadel Client ID
-	issuer      = "https://hoang-cao-long-instance-aki4x4.us1.zitadel.cloud"                          // Replace with the correct Zitadel issuer
-	redirectURL = "https://hoang-cao-long-instance-aki4x4.us1.zitadel.cloud/ui/console/auth/callback" // Replace with your redirect URI
-)
+// // Variables for your Zitadel client credentials and other settings
+// var (
+// 	clientID = "289538690970118778"                                       // Replace with your Zitadel Client ID
+// 	issuer   = "https://hoang-cao-long-instance-suwuca.us1.zitadel.cloud" // Replace with the correct Zitadel issuer
+// 	// redirectURL = "https://hoang-cao-long-instance-suwuca.us1.zitadel.cloud/ui/console/auth/callback" // Replace with your redirect URI
+// 	redirectURL = "http://localhost:8080/callback" // Replace with your redirect URI
+// )
 
-var (
-	oauth2Config *oauth2.Config
-	verifier     *oidc.IDTokenVerifier
-)
+// var (
+// 	oauth2Config *oauth2.Config
+// 	verifier     *oidc.IDTokenVerifier
+// )
 
-func main() {
-	// Set up the OIDC provider
-	ctx := context.Background()
-	provider, err := oidc.NewProvider(ctx, issuer)
-	if err != nil {
-		log.Fatal(err)
-	}
+// func main() {
+// 	// Set up the OIDC provider
+// 	ctx := context.Background()
+// 	provider, err := oidc.NewProvider(ctx, issuer)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	// Set up OAuth2 configuration with PKCE
-	oauth2Config = &oauth2.Config{
-		ClientID:    clientID,
-		RedirectURL: redirectURL,
-		Endpoint:    provider.Endpoint(),
-		Scopes:      []string{oidc.ScopeOpenID, "profile", "email"},
-	}
+// 	// Set up OAuth2 configuration with PKCE
+// 	oauth2Config = &oauth2.Config{
+// 		ClientID:    clientID,
+// 		RedirectURL: redirectURL,
+// 		Endpoint:    provider.Endpoint(),
+// 		Scopes:      []string{oidc.ScopeOpenID, "profile", "email"},
+// 	}
 
-	// Create an ID token verifier to verify tokens received from Zitadel
-	verifier = provider.Verifier(&oidc.Config{ClientID: clientID})
+// 	// Create an ID token verifier to verify tokens received from Zitadel
+// 	verifier = provider.Verifier(&oidc.Config{ClientID: clientID})
 
-	// Set up HTTP routes
-	http.HandleFunc("/", handleHome)
-	http.HandleFunc("/login", handleLogin)
-	http.HandleFunc("/callback", handleCallback)
+// 	// Set up HTTP routes
+// 	http.HandleFunc("/", handleHome)
+// 	http.HandleFunc("/login", handleLogin)
+// 	http.HandleFunc("/callback", handleCallback)
+// 	http.HandleFunc("/logout", handleLogout)
 
-	// Start the server
-	log.Println("Listening on http://localhost:8080/")
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
+// 	// Start the server
+// 	log.Println("Listening on http://localhost:8080/")
+// 	log.Fatal(http.ListenAndServe(":8080", nil))
+// }
 
-// Handle the home page with a login link
-func handleHome(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, `<html><body><a href="/login">Log in with Zitadel</a></body></html>`)
-}
+// // Handle the home page with a login link
+// func handleHome(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprintf(w, `<html><body><a href="/login">Log in with Zitadel</a></body></html>`)
+// }
 
-// Handle the login request, initiate the PKCE flow
-func handleLogin(w http.ResponseWriter, r *http.Request) {
-	codeVerifier, codeChallenge := generateCodeVerifierAndChallenge()
-	state := "some-random-state"
+// // Handle the login request, initiate the PKCE flow
+// func handleLogin(w http.ResponseWriter, r *http.Request) {
+// 	codeVerifier, codeChallenge := generateCodeVerifierAndChallenge()
+// 	state := "some-random-state"
 
-	// Generate the authorization URL with PKCE code challenge
-	authURL := oauth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-	)
+// 	// Generate the authorization URL with PKCE code challenge
+// 	authURL := oauth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline,
+// 		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
+// 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+// 		oauth2.SetAuthURLParam("response_type", "code"),
+// 	)
 
-	// Store the code verifier in a cookie or session
-	http.SetCookie(w, &http.Cookie{Name: "code_verifier", Value: codeVerifier, Path: "/"})
+// 	// Store the code verifier in a cookie or session
+// 	http.SetCookie(w, &http.Cookie{Name: "code_verifier", Value: codeVerifier, Path: "/"})
 
-	// Redirect the user to the Zitadel login page
-	http.Redirect(w, r, authURL, http.StatusFound)
-}
+// 	// Redirect the user to the Zitadel login page
+// 	http.Redirect(w, r, authURL, http.StatusFound)
+// }
 
-// Handle the callback from Zitadel
-func handleCallback(w http.ResponseWriter, r *http.Request) {
-	// Verify the state to prevent CSRF (in a real app, you should implement state verification)
-	if r.URL.Query().Get("state") != "some-random-state" {
-		http.Error(w, "State did not match", http.StatusBadRequest)
-		return
-	}
+// // Handle the callback from Zitadel
+// func handleCallback(w http.ResponseWriter, r *http.Request) {
+// 	log.Print(r.URL.Query())
 
-	// Retrieve the code from the query string
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		http.Error(w, "Code not found", http.StatusBadRequest)
-		return
-	}
+// 	// Verify the state to prevent CSRF (in a real app, you should implement state verification)
+// 	state := r.URL.Query().Get("state")
+// 	if state != "some-random-state" {
+// 		http.Error(w, "State did not match", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Get the code verifier from the cookie
-	codeVerifierCookie, err := r.Cookie("code_verifier")
-	if err != nil {
-		http.Error(w, "Code verifier not found", http.StatusBadRequest)
-		return
-	}
-	codeVerifier := codeVerifierCookie.Value
+// 	// Retrieve the code from the query string
+// 	code := r.URL.Query().Get("code")
+// 	if code == "" {
+// 		http.Error(w, "Code not found", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Exchange the authorization code for tokens
-	ctx := context.Background()
-	token, err := oauth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
-	)
-	if err != nil {
-		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	log.Print(code)
 
-	// Extract the ID token
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		http.Error(w, "No ID token found", http.StatusInternalServerError)
-		return
-	}
+// 	// Get the code verifier from the cookie
+// 	codeVerifierCookie, err := r.Cookie("code_verifier")
+// 	if err != nil {
+// 		http.Error(w, "Code verifier not found", http.StatusBadRequest)
+// 		return
+// 	}
+// 	codeVerifier := codeVerifierCookie.Value
 
-	// Verify the ID token
-	idToken, err := verifier.Verify(ctx, rawIDToken)
-	if err != nil {
-		http.Error(w, "Failed to verify ID token: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	// Exchange the authorization code for tokens
+// 	ctx := context.Background()
+// 	token, err := oauth2Config.Exchange(ctx, code,
+// 		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
+// 	)
+// 	if err != nil {
+// 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Extract the user claims from the ID token
-	var claims struct {
-		Email         string `json:"email"`
-		EmailVerified bool   `json:"email_verified"`
-	}
-	if err := idToken.Claims(&claims); err != nil {
-		http.Error(w, "Failed to extract claims: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	// Extract the ID token
+// 	rawIDToken, ok := token.Extra("id_token").(string)
+// 	if !ok {
+// 		http.Error(w, "No ID token found", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	log.Println(rawIDToken)
 
-	// Display the user's email
-	fmt.Fprintf(w, "User logged in! Email: %s, Verified: %t", claims.Email, claims.EmailVerified)
-}
+// 	// Verify the ID token
+// 	idToken, err := verifier.Verify(ctx, rawIDToken)
+// 	if err != nil {
+// 		http.Error(w, "Failed to verify ID token: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-// Generate PKCE code verifier and challenge
-func generateCodeVerifierAndChallenge() (string, string) {
-	// Generate a random code verifier
-	codeVerifier := make([]byte, 32)
-	_, err := rand.Read(codeVerifier)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	// https: //hoang-cao-long-instance-suwuca.us1.zitadel.cloud/oidc/v1/userinfo
 
-	// Encode the code verifier to base64
-	encodedVerifier := base64.RawURLEncoding.EncodeToString(codeVerifier)
+// 	// Extract the user claims from the ID token
+// 	var claims struct {
+// 		Email         string      `json:"email"`
+// 		EmailVerified bool        `json:"email_verified"`
+// 		Profile       interface{} `json:"profile"`
+// 		ISS           string      `json:"iss"`
+// 	}
+// 	if err := idToken.Claims(&claims); err != nil {
+// 		http.Error(w, "Failed to extract claims: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Create a SHA-256 hash of the verifier as the code challenge
-	challenge := sha256Base64URLEncode(encodedVerifier)
+// 	// Display the user's email
+// 	fmt.Fprintf(w, "User logged in! Email: %s, Verified: %t, Name: %v", claims.Email, claims.EmailVerified, claims.Profile)
+// }
 
-	return encodedVerifier, challenge
-}
+// // Generate PKCE code verifier and challenge
+// func generateCodeVerifierAndChallenge() (string, string) {
+// 	// Generate a random code verifier
+// 	codeVerifier := make([]byte, 32)
+// 	_, err := rand.Read(codeVerifier)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-// Helper function to encode a string using SHA-256 and Base64 URL encoding
-func sha256Base64URLEncode(s string) string {
-	hash := sha256.New()
-	hash.Write([]byte(s))
-	return base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
-}
+// 	// Encode the code verifier to base64
+// 	encodedVerifier := base64.RawURLEncoding.EncodeToString(codeVerifier)
 
-func handleLogout(w http.ResponseWriter, r *http.Request) {
-	// Clear session cookies or other session data
-	http.SetCookie(w, &http.Cookie{
-		Name:   "id_token",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1,
-	})
+// 	// Create a SHA-256 hash of the verifier as the code challenge
+// 	challenge := sha256Base64URLEncode(encodedVerifier)
 
-	// Redirect to Zitadel's logout endpoint
-	http.Redirect(w, r, getLogoutURL(), http.StatusFound)
-}
+// 	return encodedVerifier, challenge
+// }
 
-func getLogoutURL() string {
-	// Here you should retrieve the ID token from your session store or cookies
-	idToken := "ID_TOKEN_STORED_IN_SESSION" // For example, this could be from a cookie or session storage
+// // Helper function to encode a string using SHA-256 and Base64 URL encoding
+// func sha256Base64URLEncode(s string) string {
+// 	hash := sha256.New()
+// 	hash.Write([]byte(s))
+// 	return base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
+// }
 
-	// Define where to redirect the user after logout
-	postLogoutRedirectURL := "http://localhost:8080" // Replace with your app’s URL
+// func handleLogout(w http.ResponseWriter, r *http.Request) {
+// 	// Clear session cookies or other session data
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:   "id_token",
+// 		Value:  "",
+// 		Path:   "/",
+// 		MaxAge: -1,
+// 	})
 
-	// Zitadel logout endpoint
-	logoutEndpoint := "https://issuer.zitadel.ch/oidc/v1/logout"
+// 	// Redirect to Zitadel's logout endpoint
+// 	http.Redirect(w, r, getLogoutURL(), http.StatusFound)
+// }
 
-	// Create the logout URL
-	logoutURL := fmt.Sprintf("%s?id_token_hint=%s&post_logout_redirect_uri=%s", logoutEndpoint, idToken, postLogoutRedirectURL)
-	return logoutURL
-}
+// func getLogoutURL() string {
+// 	// Here you should retrieve the ID token from your session store or cookies
+// 	idToken := "ID_TOKEN_STORED_IN_SESSION" // For example, this could be from a cookie or session storage
+
+// 	// Define where to redirect the user after logout
+// 	postLogoutRedirectURL := "http://localhost:8080" // Replace with your app’s URL
+
+// 	// Zitadel logout endpoint
+// 	logoutEndpoint := "https://hoang-cao-long-instance-aki4x4.us1.zitadel.cloud/ui/console/signedout"
+
+// 	// Create the logout URL
+// 	logoutURL := fmt.Sprintf("%s?id_token_hint=%s&post_logout_redirect_uri=%s", logoutEndpoint, idToken, postLogoutRedirectURL)
+// 	return logoutURL
+// }
