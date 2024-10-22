@@ -19,7 +19,7 @@ import (
 
 var (
 	// flags to be provided for running the example server
-	domain = flag.String("domain", "http://localhost", "your ZITADEL instance domain (in the form: <instance>.zitadel.cloud or <yourdomain>)")
+	domain = flag.String("domain", "localhost", "your ZITADEL instance domain (in the form: <instance>.zitadel.cloud or <yourdomain>)")
 	key    = flag.String("key", "290226479818604546.json", "path to your key.json")
 	port   = flag.String("port", "8090", "port to run the server on (default is 8089)")
 

@@ -205,16 +205,20 @@ github.com/zitadel/logging
 # github.com/zitadel/oidc/v3 v3.30.0
 ## explicit; go 1.21
 github.com/zitadel/oidc/v3/pkg/client
+github.com/zitadel/oidc/v3/pkg/client/rp
 github.com/zitadel/oidc/v3/pkg/client/rs
 github.com/zitadel/oidc/v3/pkg/crypto
 github.com/zitadel/oidc/v3/pkg/http
 github.com/zitadel/oidc/v3/pkg/oidc
+github.com/zitadel/oidc/v3/pkg/oidc/grants/tokenexchange
 github.com/zitadel/oidc/v3/pkg/strings
 # github.com/zitadel/schema v1.3.0
 ## explicit; go 1.18
 github.com/zitadel/schema
 # github.com/zitadel/zitadel-go/v3 v3.2.0
 ## explicit; go 1.21
+github.com/zitadel/zitadel-go/v3/pkg/authentication
+github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc
 github.com/zitadel/zitadel-go/v3/pkg/authorization
 github.com/zitadel/zitadel-go/v3/pkg/authorization/oauth
 github.com/zitadel/zitadel-go/v3/pkg/http/middleware
@@ -265,6 +269,7 @@ golang.org/x/net/idna
 ## explicit; go 1.18
 golang.org/x/oauth2
 golang.org/x/oauth2/authhandler
+golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/google
 golang.org/x/oauth2/google/externalaccount
 golang.org/x/oauth2/google/internal/externalaccountauthorizeduser
