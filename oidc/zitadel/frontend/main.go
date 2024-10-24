@@ -2,19 +2,18 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
 	"embed"
-	_ "embed"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"html/template"
-	"log"
+	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/zitadel/zitadel-go/v3/pkg/authentication"
 	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
@@ -23,36 +22,18 @@ import (
 
 var (
 	// flags to be provided for running the example server
-	domain = flag.String("domain", "http://localhost:8089", "your ZITADEL instance domain (in the form: https://<instance>.zitadel.cloud or https://<yourdomain>)")
-	// key         = flag.String("key", "", "encryption key")
-	clientID    = flag.String("clientID", "290366298855112706", "clientID provided by ZITADEL")
+	domain      = flag.String("domain", "hoang-cao-long-instance-squ2u0.us1.zitadel.cloud", "your ZITADEL instance domain (in the form: https://<instance>.zitadel.cloud or https://<yourdomain>)")
+	key         = flag.String("key", "14d67567f09d56fd2d084cbcad6b4102", "encryption key")
+	clientID    = flag.String("clientID", "290660446082515648", "clientID provided by ZITADEL")
 	redirectURI = flag.String("redirectURI", "http://localhost:8090/auth/callback", "redirectURI registered at ZITADEL")
 	port        = flag.String("port", "8090", "port to run the server on (default is 8089)")
 
-	// go:embed "templates/*.html"
+	//go:embed "templates/*.html"
 	templates embed.FS
+
+	// base url backend
+	baseURLBe = "http://localhost:8091/api"
 )
-
-// Generate a random 32-byte encryption key and return it as a base64-encoded string
-func generateEncryptionKey() (string, error) {
-	key := make([]byte, 16) // 32 bytes = 256 bits
-	_, err := rand.Read(key)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(key), nil
-}
-
-/*
- This example demonstrates how to authenticate a user for your application with ZITADEL
- using the provided authentication (AuthZ) middleware.
-
- The main endpoint of the application is the /profile page, where some information about the
- authenticated user will be displayed.
-
- Additionally, the authentication handler will register some routes on the /auth path prefix,
- to be able to redirect the user to the Login UI and back for authentication as well as for the sign-out.
-*/
 
 func main() {
 	flag.Parse()
@@ -65,14 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	keyGen, err := generateEncryptionKey()
-	if err != nil {
-		log.Fatalf("Failed to generate AES key: %v", err)
-	}
-	key := flag.String("key", keyGen, "encryption key")
-
-	// Initiate the authentication by providing a zitadel configuration and handler.
-	// This example will use OIDC/OAuth2 PKCE Flow, therefore you will also need to initialize that with the generated client_id:
+	// init authentication
 	authN, err := authentication.New(ctx, zitadel.New(*domain), *key,
 		openid.DefaultAuthentication(*clientID, *redirectURI, *key),
 	)
@@ -81,50 +55,109 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Initialize the middleware by providing the sdk
+	// init middleware
 	mw := authentication.Middleware(authN)
 
 	router := http.NewServeMux()
 
-	// Register the authentication handler on your desired path.
-	// It will register the following handlers on it:
-	// - /login (starts the authentication process to the Login UI)
-	// - /callback (handles the redirect back from the Login UI)
-	// - /logout (handles the logout process)
 	router.Handle("/auth/", authN)
-	// This endpoint is only accessible with a valid authentication. If there is none, it will directly redirect the user
-	// to the Login UI for authentication. If successful (or already authenticated), the user will be presented the profile page.
-	router.Handle("/profile", mw.RequireAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// Using the [middleware.Context] function we can gather information about the authenticated user.
-		// This example will just print a JSON representation of the UserInfo of the typed [*oidc.UserInfoContext].
-		authCtx := mw.Context(req.Context())
-		data, err := json.MarshalIndent(authCtx.UserInfo, "", "	")
-		if err != nil {
-			slog.Error("error marshalling profile response", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = t.ExecuteTemplate(w, "profile.html", string(data))
-		if err != nil {
-			slog.Error("error writing profile response", "error", err)
-		}
-	})))
-	// This endpoint is accessible by anyone, but it will check if there already is a valid session (authentication).
-	// If there is an active session, the information will be put into the context for later retrieval.
+
 	router.Handle("/", mw.CheckAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// In this case we check for an active session and directly redirect the user to the profile page.
-		// You could certainly also use [middleware.Context] to get more information and use it in the home page.
-		if authentication.IsAuthenticated(req.Context()) {
-			http.Redirect(w, req, "/profile", http.StatusFound)
-			return
-		}
 		err = t.ExecuteTemplate(w, "home.html", nil)
 		if err != nil {
 			slog.Error("error writing home page response", "error", err)
 		}
 	})))
 
-	// start the server on the specified port (default http://localhost:8089)
+	router.Handle("/tasks", mw.CheckAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		userInfo := mw.Context(req.Context())
+
+		fullURL := fmt.Sprintf("%s/tasks", baseURLBe)
+
+		reqBE, err := http.NewRequest("GET", fullURL, nil)
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return
+		}
+
+		// add header
+		reqBE.Header.Add("Content-Type", "application/json")
+		reqBE.Header.Add("Authorization", fmt.Sprintf("Bearer %s", userInfo.Tokens.AccessToken))
+
+		// request
+		client := &http.Client{}
+		resp, err := client.Do(reqBE)
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		// response
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response:", err)
+			return
+		}
+
+		fmt.Fprint(w, string(body))
+	})))
+
+	router.Handle("/add-task", mw.CheckAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		userInfo := mw.Context(req.Context())
+
+		fullURL := fmt.Sprintf("%s/add-task", baseURLBe)
+
+		// add body
+		formData := url.Values{}
+		formData.Set("task", "hoang-cao-long")
+
+		reqBE, err := http.NewRequest("POST", fullURL, strings.NewReader(formData.Encode()))
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return
+		}
+
+		// add header
+		reqBE.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		reqBE.Header.Add("Authorization", fmt.Sprintf("Bearer %s", userInfo.Tokens.AccessToken))
+
+		// bodyData := `{"task": "hoang-cao-long"}`
+		// req.Body = io.NopCloser(bytes.NewReader([]byte(bodyData)))
+
+		// send request
+		client := &http.Client{}
+		resp, err := client.Do(reqBE)
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		// response
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response:", err)
+			return
+		}
+
+		fmt.Fprint(w, string(body))
+	})))
+
+	router.Handle("/profile", mw.RequireAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		userInfo := mw.Context(req.Context())
+		userInfoData, err := json.MarshalIndent(userInfo.UserInfo, "", "	")
+		if err != nil {
+			slog.Error("error marshalling profile response", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = t.ExecuteTemplate(w, "profile.html", string(userInfoData))
+		if err != nil {
+			slog.Error("error writing profile response", "error", err)
+		}
+	})))
+
 	lis := fmt.Sprintf(":%s", *port)
 	slog.Info("server listening, press ctrl+c to stop", "addr", "http://localhost"+lis)
 	err = http.ListenAndServe(lis, router)

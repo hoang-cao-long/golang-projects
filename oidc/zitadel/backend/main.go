@@ -19,9 +19,9 @@ import (
 
 var (
 	// flags to be provided for running the example server
-	domain = flag.String("domain", "localhost", "your ZITADEL instance domain (in the form: <instance>.zitadel.cloud or <yourdomain>)")
-	key    = flag.String("key", "290226479818604546.json", "path to your key.json")
-	port   = flag.String("port", "8090", "port to run the server on (default is 8089)")
+	domain = flag.String("domain", "hoang-cao-long-instance-squ2u0.us1.zitadel.cloud", "your ZITADEL instance domain (in the form: <instance>.zitadel.cloud or <yourdomain>)")
+	key    = flag.String("key", "290660512553779904.json", "path to your key.json")
+	port   = flag.String("port", "8091", "port to run the server on (default is 8089)")
 
 	// tasks are used to store an in-memory list used in the protected endpoint
 	tasks []string
@@ -68,7 +68,7 @@ func main() {
 	// This endpoint is only accessible with a valid authorization (in this case a valid access_token / PAT).
 	// It will list all stored tasks. In case the user is granted the `admin` role it will add a separate task telling him
 	// to add a new task.
-	router.Handle("/api/tasks", mw.RequireAuthorization()(http.HandlerFunc(
+	router.Handle("GET /api/tasks", mw.RequireAuthorization()(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			// Using the [middleware.Context] function we can gather information about the authorized user.
 			// This example will just print the users ID using the provided method, and it will also
@@ -92,7 +92,7 @@ func main() {
 
 	// This endpoint is only accessible with a valid authorization, which was granted the `admin` role (in any organization).
 	// It will add the provided task to the list of existing ones.
-	router.Handle("/api/add-task", mw.RequireAuthorization(authorization.WithRole(`admin`))(http.HandlerFunc(
+	router.Handle("POST /api/add-task", mw.RequireAuthorization(authorization.WithRole(`admin`))(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			// get the provided task and do not accept an empty value
 			task := strings.TrimSpace(r.FormValue("task"))

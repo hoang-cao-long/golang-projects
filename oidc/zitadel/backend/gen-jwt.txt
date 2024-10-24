@@ -1,0 +1,16 @@
+zitadel-tools key2jwt --audience=http://localhost:8089 --key=290401941194801154.json --output=jwt.txt
+
+decode header
+{
+   "alg": "RS256",
+   "kid": "290401941194801154" 
+}
+
+decode payload
+{
+   "iss": "290226440593539074", 
+   "sub": "290226440593539074", 
+   "aud": "http://localhost:8089",
+   "exp": 1605183582,
+   "iat": 1605179982
+}
