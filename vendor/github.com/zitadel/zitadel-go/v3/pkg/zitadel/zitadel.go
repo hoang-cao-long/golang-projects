@@ -14,8 +14,8 @@ type Zitadel struct {
 func New(domain string, options ...Option) *Zitadel {
 	zitadel := &Zitadel{
 		domain: domain,
-		port:   "443",
-		tls:    true,
+		port:   "8089",
+		tls:    false,
 	}
 	for _, option := range options {
 		option(zitadel)

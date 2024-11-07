@@ -22,9 +22,9 @@ import (
 
 var (
 	// flags to be provided for running the example server
-	domain      = flag.String("domain", "hoang-cao-long-instance-squ2u0.us1.zitadel.cloud", "your ZITADEL instance domain (in the form: https://<instance>.zitadel.cloud or https://<yourdomain>)")
+	domain      = flag.String("domain", "localhost", "your ZITADEL instance domain (in the form: https://<instance>.zitadel.cloud or https://<yourdomain>)")
 	key         = flag.String("key", "14d67567f09d56fd2d084cbcad6b4102", "encryption key")
-	clientID    = flag.String("clientID", "290660446082515648", "clientID provided by ZITADEL")
+	clientID    = flag.String("clientID", "292578941116416002", "clientID provided by ZITADEL")
 	redirectURI = flag.String("redirectURI", "http://localhost:8090/auth/callback", "redirectURI registered at ZITADEL")
 	port        = flag.String("port", "8090", "port to run the server on (default is 8089)")
 
@@ -67,13 +67,22 @@ func main() {
 		if err != nil {
 			slog.Error("error writing home page response", "error", err)
 		}
+
+		if authentication.IsAuthenticated(req.Context()) {
+			userInfo := mw.Context(req.Context())
+			fmt.Println("access token: ", userInfo.Tokens.AccessToken)
+		}
 	})))
 
 	router.Handle("/tasks", mw.CheckAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if !authentication.IsAuthenticated(req.Context()) {
+			http.Redirect(w, req, "/", http.StatusUnauthorized)
+			return
+		}
+
 		userInfo := mw.Context(req.Context())
 
 		fullURL := fmt.Sprintf("%s/tasks", baseURLBe)
-
 		reqBE, err := http.NewRequest("GET", fullURL, nil)
 		if err != nil {
 			fmt.Println("Error creating request:", err)
@@ -121,9 +130,6 @@ func main() {
 		// add header
 		reqBE.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		reqBE.Header.Add("Authorization", fmt.Sprintf("Bearer %s", userInfo.Tokens.AccessToken))
-
-		// bodyData := `{"task": "hoang-cao-long"}`
-		// req.Body = io.NopCloser(bytes.NewReader([]byte(bodyData)))
 
 		// send request
 		client := &http.Client{}
