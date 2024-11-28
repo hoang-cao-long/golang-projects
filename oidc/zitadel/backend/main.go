@@ -10,8 +10,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/zitadel-go/v3/pkg/authorization"
 	"github.com/zitadel/zitadel-go/v3/pkg/authorization/oauth"
+	"github.com/zitadel/zitadel-go/v3/pkg/client"
+	objectV2 "github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/object/v2"
+	userV2 "github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/user/v2"
 	"github.com/zitadel/zitadel-go/v3/pkg/http/middleware"
 	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 	"golang.org/x/exp/slog"
@@ -23,8 +27,11 @@ var (
 	key    = flag.String("key", "292578997605236738.json", "path to your key.json")
 	port   = flag.String("port", "8091", "port to run the server on (default is 8089)")
 
+	keyUserService = flag.String("keyUserService", "295610152923430914.json", "path to your key.json")
+
 	// tasks are used to store an in-memory list used in the protected endpoint
-	tasks []string
+	tasks  []string
+	userID = "user123"
 )
 
 func main() {
@@ -32,11 +39,19 @@ func main() {
 
 	ctx := context.Background()
 
-	// init authorize
+	// authz
 	authZ, err := authorization.New(ctx, zitadel.New(*domain), oauth.DefaultAuthorization(*key))
 	if err != nil {
 		slog.Error("zitadel sdk could not initialize", "error", err)
 		os.Exit(1)
+	}
+
+	// client
+	api, err := client.New(ctx, zitadel.New(*domain),
+		client.WithAuth(client.DefaultServiceUserAuthentication(*keyUserService, oidc.ScopeOpenID, client.ScopeZitadelAPI())),
+	)
+	if err != nil {
+		slog.Error("Failed to create Zitadel client: %v", err)
 	}
 
 	// init middleware
@@ -44,7 +59,7 @@ func main() {
 
 	router := http.NewServeMux()
 
-	router.Handle("/api/healthz", http.HandlerFunc(
+	router.Handle("GET /api/healthz", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			err = jsonResponse(w, "OK", http.StatusOK)
 			if err != nil {
@@ -90,6 +105,93 @@ func main() {
 				slog.Error("error writing task added response", "error", err)
 				return
 			}
+		})))
+
+	router.Handle("POST /api/user/create", mw.RequireAuthorization()(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			userName := "testUserName1"
+
+			// create user
+			userRespCreated, err := api.UserServiceV2().AddHumanUser(ctx, &userV2.AddHumanUserRequest{
+				UserId:       &userID,
+				Username:     &userName,
+				Organization: &objectV2.Organization{},
+				Profile: &userV2.SetHumanProfile{
+					GivenName:         "testGivenName1",
+					FamilyName:        "testFamilyName1",
+					NickName:          new(string),
+					DisplayName:       new(string),
+					PreferredLanguage: new(string),
+					Gender:            userV2.Gender_GENDER_MALE.Enum(),
+				},
+				Email: &userV2.SetHumanEmail{
+					Email:        "hclong2k@gmail.com",
+					Verification: nil,
+				},
+				// PasswordType: &userV2.AddHumanUserRequest_Password{
+				// 	Password: &userV2.Password{
+				// 		Password:       "Zitadel@123",
+				// 		ChangeRequired: true,
+				// 	},
+				// },
+			})
+			if err != nil {
+				slog.Error("Failed to create Zitadel client: %v", err)
+			}
+			slog.Info("User created successfully: %v", userRespCreated)
+
+			// set password
+			// _, err = api.UserServiceV2().SetPassword(ctx, &userV2.SetPasswordRequest{
+			// 	UserId: userResp.UserId,
+			// 	NewPassword: &userV2.Password{
+			// 		Password:       "Zitadel@123",
+			// 		ChangeRequired: false,
+			// 	},
+			// 	Verification: nil,
+			// })
+			// if err != nil {
+			// 	slog.Error("Failed to create Zitadel client: %v", err)
+			// }
+		})))
+
+	router.Handle("POST /api/user/update", mw.RequireAuthorization()(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			userName := "testUserName2"
+
+			// update user
+			userRespUpdated, err := api.UserServiceV2().UpdateHumanUser(ctx, &userV2.UpdateHumanUserRequest{
+				UserId:   userID,
+				Username: &userName,
+				Profile: &userV2.SetHumanProfile{
+					GivenName:  "testGivenName2",
+					FamilyName: "testFamilyName2",
+					NickName:   new(string),
+					// DisplayName:       new(string),
+					PreferredLanguage: new(string),
+					Gender:            userV2.Gender_GENDER_DIVERSE.Enum(),
+				},
+				Email: &userV2.SetHumanEmail{
+					Email:        "hclong2k@gmail.com",
+					Verification: nil,
+				},
+				// Phone: &userV2.SetHumanPhone{
+				// 	Phone:        "",
+				// 	Verification: nil,
+				// },
+				Password: &userV2.SetPassword{
+					PasswordType: &userV2.SetPassword_Password{
+						Password: &userV2.Password{
+							Password:       "Zitadel@321",
+							ChangeRequired: false,
+						},
+					},
+					Verification: nil,
+				},
+			})
+			if err != nil {
+				slog.Error("Failed to update Zitadel client: %v", err)
+			}
+			slog.Info("User updated successfully: %v", userRespUpdated)
 		})))
 
 	lis := fmt.Sprintf(":%s", *port)

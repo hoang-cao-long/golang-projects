@@ -68,10 +68,10 @@ func main() {
 			slog.Error("error writing home page response", "error", err)
 		}
 
-		if authentication.IsAuthenticated(req.Context()) {
-			userInfo := mw.Context(req.Context())
-			fmt.Println("access token: ", userInfo.Tokens.AccessToken)
-		}
+		// if authentication.IsAuthenticated(req.Context()) {
+		// 	userInfo := mw.Context(req.Context())
+		// 	fmt.Println("access token: ", userInfo.Tokens.AccessToken)
+		// }
 	})))
 
 	router.Handle("/tasks", mw.CheckAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -162,6 +162,66 @@ func main() {
 		if err != nil {
 			slog.Error("error writing profile response", "error", err)
 		}
+	})))
+
+	router.Handle("/user/create", mw.RequireAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		userInfo := mw.Context(req.Context())
+
+		fullURL := fmt.Sprintf("%s/user/create", baseURLBe)
+
+		// add body
+		formData := url.Values{}
+
+		reqBE, err := http.NewRequest("POST", fullURL, strings.NewReader(formData.Encode()))
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return
+		}
+
+		// add header
+		reqBE.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		reqBE.Header.Add("Authorization", fmt.Sprintf("Bearer %s", userInfo.Tokens.AccessToken))
+
+		// send request
+		client := &http.Client{}
+		resp, err := client.Do(reqBE)
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		fmt.Fprint(w, "Create user")
+	})))
+
+	router.Handle("/user/update", mw.RequireAuthentication()(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		userInfo := mw.Context(req.Context())
+
+		fullURL := fmt.Sprintf("%s/user/update", baseURLBe)
+
+		// add body
+		formData := url.Values{}
+
+		reqBE, err := http.NewRequest("POST", fullURL, strings.NewReader(formData.Encode()))
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return
+		}
+
+		// add header
+		reqBE.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		reqBE.Header.Add("Authorization", fmt.Sprintf("Bearer %s", userInfo.Tokens.AccessToken))
+
+		// send request
+		client := &http.Client{}
+		resp, err := client.Do(reqBE)
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		fmt.Fprint(w, "Update user")
 	})))
 
 	lis := fmt.Sprintf(":%s", *port)

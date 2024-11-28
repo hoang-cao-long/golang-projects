@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      /* Block */
+      .layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+
+      /* Element */
+      .layout__header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      .layout__title {
+        font-size: 2.5rem;
+        font-weight: bold;
+      }
+
+      .layout__description {
+        max-width: 500px;
+        margin-left: 20px;
+      }
+
+      .layout__text {
+        margin-bottom: 10px;
+      }
+
+      /* Modifier */
+      .layout__button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .layout__button--primary {
+        background-color: black;
+        color: white;
+      }
+
+      .layout__image {
+        width: 100%;
+      }
+
+      .layout__image-element {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="layout__header">
+        <h1 class="layout__title">Just that simple</h1>
+        <div class="layout__description">
+          <p class="layout__text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Faucibus in
+            libero risus semper habitant arcu eget.
+          </p>
+          <button class="layout__button layout__button--primary">
+            Get started
+          </button>
+        </div>
+      </div>
+      <div class="layout__image">
+        <img
+          src="your-image.jpg"
+          alt="Image description"
+          class="layout__image-element"
+        />
+      </div>
+    </div>
+  </body>
+</html>
